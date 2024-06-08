@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebSocket Connection</title>
+    <title>WebSocket JSON Sync</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
             margin: 0;
             padding: 0;
             display: flex;
@@ -15,136 +15,122 @@
             align-items: center;
             height: 100vh;
         }
-
         .container {
-            background-color: #fff;
+            background-color: #ffffff;
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 400px;
-            max-width: 90%;
-            text-align: center;
+            width: 350px;
+            max-width: 100%;
+            box-sizing: border-box;
         }
-
         h1 {
-            margin-bottom: 20px;
+            text-align: center;
             color: #333;
-            font-size: 28px;
-        }
-
-        h2 {
-            margin-bottom: 15px;
-            color: #555;
+            margin-bottom: 20px;
             font-size: 24px;
         }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
         label {
-            margin-bottom: 5px;
+            display: block;
+            margin-top: 15px;
             color: #555;
-            font-weight: bold;
-            font-size: 18px;
+            font-size: 14px;
         }
-
-        input[type="text"], input[type="email"], input[type="tel"], button {
-            margin-bottom: 15px;
-            padding: 10px;
+        input[type="text"], input[type="email"], input[type="number"], input[type="tel"] {
             width: 100%;
-            border: 1px solid #ced4da;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
             border-radius: 5px;
+            font-size: 14px;
             box-sizing: border-box;
-            font-size: 16px;
         }
-
-        input[type="text"]:focus, input[type="email"]:focus, input[type="tel"]:focus, button:focus {
-            outline: none;
-            border-color: #007bff;
-        }
-
-        button {
+        input[type="submit"] {
+            width: 100%;
+            padding: 12px;
             background-color: #007bff;
-            color: #fff;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            font-size: 16px;
             border: none;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 16px;
+            margin-top: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
         }
-
-        button:hover {
+        input[type="submit"]:hover {
             background-color: #0056b3;
         }
-
-        input[disabled] {
-            background-color: #f0f0f0;
-            border: 1px solid #ddd;
-        }
-
-        .format-message {
-            margin-top: -5px;
-            font-size: 12px;
-            color: #999;
-        }
-
-        ::placeholder {
-            color: #999;
+        @media (max-width: 400px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 20px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>WebSocket Connection</h1>
-
-        <!-- Basic Details form -->
-        <form id="inputForm">
-            <h2>Basic Details</h2>
+        <h1>Edit User Data</h1>
+        <form id="userForm">
             <label for="name">Name:</label>
             <input type="text" id="name" name="name" required>
+
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" required>
-            <label for="mobile">Mobile No:</label>
-            <input type="tel" id="mobile" name="mobile" pattern="[0-9]{10}" maxlength="10" placeholder="Enter 10-digit number" required>
-            <p class="format-message">Please enter the 10-digit mobile number without any spaces or special characters.</p>
-            <button type="submit">Submit</button>
-        </form>
 
-        <!-- Output form -->
-        <h2>Response</h2>
-        <form id="outputForm">
-            <label for="responseName">Name:</label>
-            <input type="text" id="responseName" disabled>
-            <label for="responseEmail">Email:</label>
-            <input type="email" id="responseEmail" disabled>
-            <label for="responseMobile">Mobile No:</label>
-            <input type="text" id="responseMobile" disabled>
+            <label for="phone">Phone Number:</label>
+            <input type="tel" id="phone" name="phone" required>
+
+            <label for="city">City:</label>
+            <input type="text" id="city" name="city" required>
+
+            <label for="age">Age:</label>
+            <input type="number" id="age" name="age" required>
+
+            <input type="submit" value="Update">
         </form>
     </div>
-
     <script>
-        const socket = new WebSocket('ws://localhost:8080');
+        const ws = new WebSocket('ws://localhost:8080');
 
-        socket.onopen = function(event) {
-            console.log('WebSocket connection established');
+        ws.onopen = () => {
+            console.log('Connected to the WebSocket server');
         };
 
-        socket.onmessage = function(event) {
-            const response = JSON.parse(event.data);
-            document.getElementById('responseName').value = response.name;
-            document.getElementById('responseEmail').value = response.email;
-            document.getElementById('responseMobile').value = response.mobile; // Display mobile number
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            console.log('Data received from server:', data);
+            document.getElementById('name').value = data.name || '';
+            document.getElementById('email').value = data.email || '';
+            document.getElementById('phone').value = data.phone || '';
+            document.getElementById('city').value = data.city || '';
+            document.getElementById('age').value = data.age || '';
         };
 
-        document.getElementById('inputForm').addEventListener('submit', function(event) {
+        ws.onclose = () => {
+            console.log('Disconnected from the WebSocket server');
+        };
+
+        document.getElementById('userForm').addEventListener('submit', function (event) {
             event.preventDefault();
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
-            const mobile = document.getElementById('mobile').value;
-            const data = { name, email, mobile };
-            socket.send(JSON.stringify(data));
+            const phone = document.getElementById('phone').value;
+            const city = document.getElementById('city').value;
+            const age = document.getElementById('age').value;
+
+            const updatedData = {
+                name,
+                email,
+                phone,
+                city,
+                age
+            };
+
+            console.log('Sending updated data to server:', updatedData);
+            ws.send(JSON.stringify(updatedData));
         });
     </script>
 </body>
